@@ -38,9 +38,9 @@ pub async fn index_usdc_transfers(
 
     for sig_info in signatures {
         let signature = Signature::from_str(&sig_info.signature)?;
-        let block_time = sig_info.block_time.ok_or("Missing block time")?;
+        let block_time = sig_info.block_time.ok_or("Missing block time ".to_string())?;
 
-        let tx_time = Utc.timestamp_opt(block_time, 0).single().ok_or("Invalid timestamp")?;
+        let tx_time = Utc.timestamp_opt(block_time, 0).single().ok_or("Invalid timestamp ".to_string())?;
         if tx_time < start_time || tx_time > end_time {
             continue;
         }
