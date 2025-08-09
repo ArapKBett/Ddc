@@ -10,7 +10,7 @@ struct TransferResponse {
 
 pub async fn get_transfers(transfers: web::Data<Vec<Transfer>>) -> impl Responder {
     let table_content = if transfers.is_empty() {
-        "<tr><td colspan=\"4\">No USDC transfers found in the last 96 hours. Check logs for RPC or parsing errors.</td></tr>".to_string()
+        "<tr><td colspan=\"4\">No USDC transfers found in the last 24 hours.</td></tr>".to_string()
     } else {
         transfers
             .iter()
@@ -57,4 +57,4 @@ pub async fn get_transfers(transfers: web::Data<Vec<Transfer>>) -> impl Responde
         table_content
     );
     HttpResponse::Ok().content_type("text/html").body(html)
-      }
+}
