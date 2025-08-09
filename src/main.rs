@@ -1,4 +1,4 @@
-use actix_web::{web as actix_web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use chrono::{Duration, Utc};
 use solana_client::nonblocking::rpc_client::RpcClient;
 use std::env;
@@ -10,7 +10,7 @@ mod web;
 use indexer::index_usdc_transfers;
 use web::get_transfers;
 
-#[actix_web::main]
+#[actix_web::main] // Use the correct macro for async Actix main
 async fn main() -> std::io::Result<()> {
     env_logger::init();
 
@@ -38,8 +38,8 @@ async fn main() -> std::io::Result<()> {
     // Start HTTP server
     HttpServer::new(move || {
         App::new()
-            .app_data(actix_web::Data::new(transfers.clone())) // Pass transfers as shared state
-            .route("/", actix_web::get().to(get_transfers))
+            .app_data(web::Data::new(transfers.clone())) // Pass transfers as shared state
+            .route("/", web::get().to(get_transfers))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
