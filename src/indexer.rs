@@ -6,7 +6,7 @@ use solana_sdk::{
     signature::Signature,
 };
 use solana_transaction_status::{UiTransactionEncoding, EncodedConfirmedTransactionWithStatusMeta};
-use solana_client::rpc_config::GetConfirmedSignaturesForAddress2Config;
+use solana_client::rpc_config::RpcSignaturesForAddressConfig; // Correct import here
 use chrono::TimeZone;
 use std::str::FromStr;
 
@@ -25,12 +25,12 @@ pub async fn index_usdc_transfers(
     let signatures = client
         .get_signatures_for_address_with_config(
             &wallet_pubkey,
-            GetConfirmedSignaturesForAddress2Config {
+            RpcSignaturesForAddressConfig {
                 before: None,
                 until: None,
                 limit: Some(1000),
                 commitment: Some(CommitmentConfig::confirmed()),
-                min_context_slot: None, // Added the missing field
+                min_context_slot: None, // Correct field added
             },
         )
         .await?;
@@ -66,8 +66,9 @@ fn process_transaction(
 
     if let Some(meta) = &tx.transaction.meta {
         for pre_balance in meta.pre_token_balances.as_ref().unwrap_or(&vec![]).iter() {
-            if pre_balance.owner.as_ref().map(|s| s.as_str()) == Some(wallet_pubkey.to_string().as_str())
-                && pre_balance.mint.as_ref().map(|s| s.as_str()) == Some(usdc_mint_pubkey.to_string().as_str())
+            // Corrected type comparisons using `map` and `as_str`
+            if pre_balance.owner.as_ref().map(String::as_str) == Some(wallet_pubkey.to_string().as_str())
+                && pre_balance.mint.as_ref().map(String::as_str) == Some(usdc_mint_pubkey.to_string().as_str())
             {
                 transfers.push(Transfer {
                     date: tx_time,
