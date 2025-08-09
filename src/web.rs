@@ -41,7 +41,7 @@ pub async fn get_transfers(transfers: web::Data<Vec<Transfer>>) -> impl Responde
             </style>
         </head>
         <body>
-            <h1>USDC Transfers for Wallet 7cMEhpt...xuDDU</h1>
+            <h1>USDC Transfers</h1>
             <table>
                 <tr>
                     <th>Date</th>
