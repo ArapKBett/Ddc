@@ -6,7 +6,8 @@ use solana_sdk::{
     signature::Signature,
 };
 use solana_transaction_status::{UiTransactionEncoding, EncodedConfirmedTransactionWithStatusMeta};
-use std::str::FromStr;
+use solana_client::rpc_config::GetConfirmedSignaturesForAddress2Config;
+use chrono::TimeZone;
 
 use crate::models::{Transfer, TransferType};
 
@@ -23,12 +24,11 @@ pub async fn index_usdc_transfers(
     let signatures = client
         .get_signatures_for_address_with_config(
             &wallet_pubkey,
-            solana_client::rpc_config::RpcSignaturesForAddressConfig {
+            GetConfirmedSignaturesForAddress2Config {
                 before: None,
                 until: None,
                 limit: Some(1000),
                 commitment: Some(CommitmentConfig::confirmed()),
-                min_context_slot: None,
             },
         )
         .await?;
@@ -63,7 +63,7 @@ fn process_transaction(
     let mut transfers = Vec::new();
 
     if let Some(meta) = &tx.transaction.meta {
-        for pre_balance in meta.pre_token_balances.iter().flatten() {
+        for pre_balance in meta.pre_token_balances.as_ref().unwrap_or(&vec![]).iter().flatten() {
             if pre_balance.owner.as_ref() == Some(&wallet_pubkey.to_string())
                 && pre_balance.mint.as_ref() == Some(&usdc_mint_pubkey.to_string())
             {
@@ -78,4 +78,4 @@ fn process_transaction(
     }
 
     transfers
-  }
+}
