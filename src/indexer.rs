@@ -6,7 +6,7 @@ use solana_sdk::{
     signature::Signature,
 };
 use solana_transaction_status::{UiTransactionEncoding, EncodedConfirmedTransactionWithStatusMeta};
-use solana_client::rpc_config::RpcSignaturesForAddressConfig;
+use solana_client::rpc_config::GetConfirmedSignaturesForAddress2Config;
 use chrono::TimeZone;
 use std::str::FromStr;
 
@@ -25,11 +25,12 @@ pub async fn index_usdc_transfers(
     let signatures = client
         .get_signatures_for_address_with_config(
             &wallet_pubkey,
-            RpcSignaturesForAddressConfig {
+            GetConfirmedSignaturesForAddress2Config {
                 before: None,
                 until: None,
                 limit: Some(1000),
                 commitment: Some(CommitmentConfig::confirmed()),
+                min_context_slot: None, // Added the missing field
             },
         )
         .await?;
@@ -38,9 +39,9 @@ pub async fn index_usdc_transfers(
 
     for sig_info in signatures {
         let signature = Signature::from_str(&sig_info.signature)?;
-        let block_time = sig_info.block_time.ok_or("Missing block time ".to_string())?;
+        let block_time = sig_info.block_time.ok_or_else(|| "Missing block time".to_string())?;
 
-        let tx_time = Utc.timestamp_opt(block_time, 0).single().ok_or("Invalid timestamp ".to_string())?;
+        let tx_time = Utc.timestamp_opt(block_time, 0).single().ok_or_else(|| "Invalid timestamp".to_string())?;
         if tx_time < start_time || tx_time > end_time {
             continue;
         }
@@ -65,8 +66,8 @@ fn process_transaction(
 
     if let Some(meta) = &tx.transaction.meta {
         for pre_balance in meta.pre_token_balances.as_ref().unwrap_or(&vec![]).iter() {
-            if pre_balance.owner.as_ref() == Some(&wallet_pubkey.to_string())
-                && pre_balance.mint.as_ref() == Some(&usdc_mint_pubkey.to_string())
+            if pre_balance.owner.as_ref().map(|s| s.as_str()) == Some(wallet_pubkey.to_string().as_str())
+                && pre_balance.mint.as_ref().map(|s| s.as_str()) == Some(usdc_mint_pubkey.to_string().as_str())
             {
                 transfers.push(Transfer {
                     date: tx_time,
